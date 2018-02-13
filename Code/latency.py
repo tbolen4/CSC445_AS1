@@ -6,12 +6,7 @@ MY_PORT = 2695
 BUFSIZE = 1024 # max amount of data recieved at once, change if sending more???
 NET_ID = "testNetwork"  # change depending on networks used
 
-# do timestamp on both server and client for throughput or divide rtt by 2?
 # see if a char is 1 byte in python 2
-# test UDP parts see if I run into errors, may need to download more libraries
-# whats wrong with UDP and python
-# put computer on same ntp server as Linux server, get timestamp from client and server for throughput
-# see if method calls use same ntp server as cpu
 
 def main():
     if len(sys.argv) < 3:

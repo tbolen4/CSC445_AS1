@@ -6,6 +6,8 @@ MY_PORT = 2695
 BUFSIZE = 1024 # max amount of data recieved at once, change if sending more???
 NET_ID = "testNetwork_dir"  # change depending on networks used and direction
 
+# sync up server and client with same ntp server before testing
+# see if method calls use same ntp server as cpu
 
 def main():
     if len(sys.argv) < 2:
@@ -40,7 +42,8 @@ def server():
         conn, (host, remoteport) = s.accept()
         data = conn.recv(BUFSIZE)
         if not data: break
-        conn.send(data) # echo
+        rt = datetime.datetime.now()
+        conn.send(rt) # send timestamp back
         print 'Done with', host, 'port', remoteport
         conn.close()
 
@@ -56,11 +59,9 @@ def client():
         st = datetime.datetime.now()
         st = st.microsecond
         sock.send(b_size * 'a')
-        data = sock.recv(BUFSIZE)
-        rt = datetime.datetime.now()
-        rt = rt.microsecond
+        rt = sock.recv(BUFSIZE)
         sock.close()
-        transferTime = (rt - st) / 2
+        transferTime = (rt - st)
         bitCount = b_size * 8
         b_width = bitCount / transferTime
         dataArray.append(str(b_width))
