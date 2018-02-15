@@ -1,4 +1,3 @@
-
 import sys, time, datetime, socket
 from socket import *
 
@@ -94,7 +93,8 @@ def client():
             rt = rt.microsecond
             sock.close()
             pingTime = str(rt - st)
-            dataArray.append(pingTime)
+            if pingTime > 0:
+                dataArray.append(pingTime)
             print "RTT for " + str(b_size) + " bytes: " + pingTime + " microseconds"
         return dataArray
 
@@ -103,12 +103,13 @@ def writeToFile(y):
         p_type = 'TCP'
     else:
         p_type = 'UDP'
-    fileName = "Interaction_" + NET_ID + "_" + p_type + "_" + str(sys.argv[5]) + "_" + sys.argv[3] + ".txt"
+    di = "../Data/"
+    fileName = di + "Interaction_" + NET_ID + "_" + p_type + "_" + str(sys.argv[5]) + "_" + sys.argv[3] + ".txt"
     myFile = open(fileName, 'a')
     for x in y:
         myFile.write(x)
         myFile.write(",")
     myFile.close()
-    print "Data appended to " + fileName
+    print "Data appended to " +  fileName
 
 main()

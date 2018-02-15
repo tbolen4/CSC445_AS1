@@ -1,4 +1,3 @@
-
 import sys, time, datetime, socket
 from socket import *
 
@@ -6,8 +5,6 @@ MY_PORT = 2695
 BUFSIZE = 1024 # max amount of data recieved at once, change if sending more???
 NET_ID = "testNetwork_dir"  # change depending on networks used and direction
 
-# sync up server and client with same ntp server before testing
-# see if method calls use same ntp server as cpu
 
 def main():
     if len(sys.argv) < 2:
@@ -42,8 +39,7 @@ def server():
         conn, (host, remoteport) = s.accept()
         data = conn.recv(BUFSIZE)
         if not data: break
-        rt = datetime.datetime.now()
-        conn.send(rt) # send timestamp back
+        conn.send(data) # send timestamp back
         print 'Done with', host, 'port', remoteport
         conn.close()
 
@@ -59,17 +55,22 @@ def client():
         st = datetime.datetime.now()
         st = st.microsecond
         sock.send(b_size * 'a')
-        rt = sock.recv(BUFSIZE)
+        dataBack = sock.recv(BUFSIZE)
+        rt = datetime.datetime.now()
+        rt = rt.microsecond
         sock.close()
-        transferTime = (rt - st)
-        bitCount = b_size * 8
+        transferTime = float((rt - st) / 2)
+        bitCount = float(b_size * 8)
         b_width = bitCount / transferTime
-        dataArray.append(str(b_width))
-        print "Throughput: " + str(b_width) + " bits/microsecond"
+        b_width = float(b_width * 1000)
+        if b_width > 0:
+            dataArray.append(str(b_width))
+        print "Throughput: " + str(b_width) + " bits/second"
     return dataArray
 
 def writeToFile(y):
-    fileName = "Throughput_" + NET_ID + "_" + str(sys.argv[4]) + ".txt"
+    di = "../Data/"
+    fileName = di + "Throughput_" + NET_ID + "_" + str(sys.argv[4]) + ".txt"
     myFile = open(fileName, 'a')
     for x in y:
         myFile.write(x)
