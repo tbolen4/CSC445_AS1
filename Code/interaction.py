@@ -2,10 +2,8 @@ import sys, time, datetime, socket
 from socket import *
 
 MY_PORT = 2695
-BUFSIZE = 1024 # max amount of data recieved at once, change if sending more???
-NET_ID = "testNetwork" # change depending on network used
-
-# test UDP
+BUFSIZE = 4096 
+NET_ID = "LAN>PI" # change depending on network used
 
 def main():
     if len(sys.argv) < 3:
@@ -48,15 +46,14 @@ def server():
             conn, (host, remoteport) = s.accept()
             data = conn.recv(BUFSIZE)
             if not data: break
-            conn.send('x') # ack byte
+            conn.sendall('x') # ack byte
             print 'Done with', host, 'port', remoteport
-            print "Recieved Data: " + data
             conn.close()
     elif sys.argv[2] == '-u':   # for udp only
         while 1:
             data, addr = s.recvfrom(BUFSIZE)
             if not data: break
-            print "Recieved Data: " + data
+            print "Done with " + str(addr)
             s.sendto('x', (addr)) # ack byte
 
 def client():
@@ -67,35 +64,50 @@ def client():
     dataArray = []
     if sys.argv[2] == '-t':
         pack = SOCK_STREAM
+        j = 0
         for x in range (0, count):
-            sock = socket(AF_INET, pack)
-            sock.connect((server_addr, port))
-            st = datetime.datetime.now()
-            st = st.microsecond
-            sock.send(b_size * 'a')
-            data = sock.recv(BUFSIZE)
-            rt = datetime.datetime.now()
-            rt = rt.microsecond
-            sock.close()
-            pingTime = str(rt - st)
-            dataArray.append(pingTime)
-            print "RTT for " + str(b_size) + " bytes: " + pingTime + " microseconds"
+            j = j + 1
+            try:
+                sock = socket(AF_INET, pack)
+                sock.settimeout(3)
+                st = datetime.datetime.now()
+                sock.connect((server_addr, port))
+                st = st.microsecond
+                sock.sendall(b_size * 'a')
+                data = sock.recv(BUFSIZE)
+                rt = datetime.datetime.now()
+                rt = rt.microsecond
+                sock.close()
+                pingTime = rt - st
+                if pingTime > 0:
+                    pingTime = str(pingTime)
+                    dataArray.append(pingTime)
+                    print str(j) + ") RTT for " + str(b_size) + " bytes: " + pingTime + " microseconds"
+            except timeout:
+                print "Socket timed out"
         return dataArray
     if sys.argv[2] == '-u':
         pack = SOCK_DGRAM
+        j = 0
         for x in range (0, count):
-            sock = socket(AF_INET, pack)
-            st = datetime.datetime.now()
-            st = st.microsecond
-            sock.sendto((b_size * 'a'), (server_addr, port))
-            data, addr = sock.recvfrom(BUFSIZE) # why dont I need to bind to address first if UDP is connectionless
-            rt = datetime.datetime.now()
-            rt = rt.microsecond
-            sock.close()
-            pingTime = str(rt - st)
-            if pingTime > 0:
-                dataArray.append(pingTime)
-            print "RTT for " + str(b_size) + " bytes: " + pingTime + " microseconds"
+            j = j + 1
+            try:
+                sock = socket(AF_INET, pack)
+                sock.settimeout(3)
+                st = datetime.datetime.now()
+                st = st.microsecond
+                sock.sendto((b_size * 'a'), (server_addr, port))
+                data, addr = sock.recvfrom(BUFSIZE)
+                rt = datetime.datetime.now()
+                rt = rt.microsecond
+                sock.close()
+                pingTime = rt - st
+                if pingTime > 0:
+                    pingTime = str(pingTime)
+                    dataArray.append(pingTime)
+                    print str(j) + ") RTT for " + str(b_size) + " bytes: " + pingTime + " microseconds"
+            except timeout:
+                print "Socket timed out"
         return dataArray
 
 def writeToFile(y):
